@@ -1,1 +1,5 @@
-node_modules/\ndist/\n.wrangler/\n*.tgz\n.DS_Store\n
+node_modules/
+dist/
+.wrangler/
+*.tgz
+.DS_Store
