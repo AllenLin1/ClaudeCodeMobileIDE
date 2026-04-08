@@ -1,0 +1,23 @@
+name = "codepilot-server"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+[durable_objects]
+bindings = [
+  { name = "RELAY", class_name = "RelayRoom" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RelayRoom"]
+
+[[kv_namespaces]]
+binding = "LICENSING_KV"
+id = "PLACEHOLDER_KV_ID"
+
+[vars]
+REVENUECAT_WEBHOOK_SECRET = ""
+
+# RS256 keys are stored as secrets via `wrangler secret put`
+# JWT_PRIVATE_KEY_PEM = <set via wrangler secret>
+# JWT_PUBLIC_KEY_PEM  = <set via wrangler secret>
