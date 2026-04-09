@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.wrangler/
+*.tgz
+.DS_Store
+
+# Xcode
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Bridge data
+.codepilot/
+
+# Environment
+.env
+.env.local
+.dev.vars
