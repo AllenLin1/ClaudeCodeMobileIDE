@@ -6,6 +6,7 @@ import {
   type Env,
 } from "./licensing";
 import { handleWebhook } from "./webhook";
+import { handlePairRegister, handlePairLookup } from "./pairing";
 export { RelayRoom } from "./relay";
 
 function corsHeaders(): HeadersInit {
@@ -60,6 +61,17 @@ export default {
 
       if (path === "/webhook/revenuecat" && request.method === "POST") {
         return withCors(await handleWebhook(request, env));
+      }
+
+      if (path === "/pair/register" && request.method === "POST") {
+        return withCors(await handlePairRegister(request, env));
+      }
+
+      if (path.startsWith("/pair/") && request.method === "GET") {
+        const code = path.split("/pair/")[1];
+        if (code && code !== "register") {
+          return withCors(await handlePairLookup(code, env));
+        }
       }
 
       if (path.startsWith("/relay/")) {

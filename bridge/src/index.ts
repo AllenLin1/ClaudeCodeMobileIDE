@@ -127,6 +127,26 @@ export class Bridge {
       serverUrl: this.config.serverUrl,
     };
 
+    try {
+      const resp = await fetch(`${this.config.serverUrl}/pair/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: pairingCode,
+          roomId,
+          bridgePublicKey: this.crypto.getPublicKey(),
+          serverUrl: this.config.serverUrl,
+        }),
+      });
+      if (resp.ok) {
+        console.log(`[bridge] Pairing code registered with server (expires in 10 min)`);
+      } else {
+        console.warn("[bridge] Failed to register pairing code:", await resp.text());
+      }
+    } catch (err) {
+      console.warn("[bridge] Could not register pairing code:", err);
+    }
+
     displayQR(pairingInfo);
     this.relay.connect();
 
