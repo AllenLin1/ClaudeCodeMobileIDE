@@ -28,6 +28,11 @@ struct ContentView: View {
                 OnboardingView()
             } else {
                 MainTabView()
+                    .onAppear {
+                        if !appState.isConnected && appState.connectionStatus != .connecting {
+                            appState.connect()
+                        }
+                    }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: appState.hasCompletedOnboarding)

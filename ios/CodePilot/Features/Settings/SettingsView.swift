@@ -87,8 +87,7 @@ struct SettingsView: View {
 
                 if appState.pairedDeviceId != nil {
                     Button("Unpair") {
-                        appState.disconnect()
-                        appState.pairedDeviceId = nil
+                        appState.unpair()
                     }
                     .font(Theme.label)
                     .foregroundColor(Theme.statusError)

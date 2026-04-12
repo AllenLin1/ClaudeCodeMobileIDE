@@ -1,13 +1,12 @@
 import Foundation
 import Combine
 
-/// Manages the WebSocket connection to the Cloudflare Durable Objects relay.
 @MainActor
 final class RelayService: ObservableObject {
     @Published var isConnected = false
     @Published var connectionState: ConnectionState = .disconnected
 
-    enum ConnectionState {
+    enum ConnectionState: Equatable {
         case disconnected, connecting, connected, error(String)
     }
 
@@ -17,6 +16,7 @@ final class RelayService: ObservableObject {
     private var reconnectWorkItem: DispatchWorkItem?
     private var seq = 0
     private var peerAck = 0
+    private var isManuallyClosed = false
 
     var onMessage: ((Data) -> Void)?
 
@@ -25,6 +25,9 @@ final class RelayService: ObservableObject {
     private var roomId: String?
 
     func connect(serverUrl: String, roomId: String, role: String, crypto: CryptoService) {
+        disconnect()
+        isManuallyClosed = false
+
         self.serverUrl = serverUrl
         self.roomId = roomId
         self.crypto = crypto
@@ -33,8 +36,11 @@ final class RelayService: ObservableObject {
             .replacingOccurrences(of: "https://", with: "wss://")
             .replacingOccurrences(of: "http://", with: "ws://")
 
-        guard let url = URL(string: "\(wsUrl)/relay/\(roomId)?role=\(role)") else {
-            connectionState = .error("Invalid URL")
+        let urlString = "\(wsUrl)/relay/\(roomId)?role=\(role)"
+        print("[relay] Connecting to: \(urlString)")
+
+        guard let url = URL(string: urlString) else {
+            connectionState = .error("Invalid relay URL: \(urlString)")
             return
         }
 
@@ -43,24 +49,30 @@ final class RelayService: ObservableObject {
         webSocketTask = urlSession?.webSocketTask(with: url)
         webSocketTask?.resume()
 
-        connectionState = .connected
-        isConnected = true
-        reconnectAttempt = 0
-
-        receiveMessage()
+        sendPing()
     }
 
     func disconnect() {
+        isManuallyClosed = true
         reconnectWorkItem?.cancel()
+        reconnectWorkItem = nil
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
+        urlSession?.invalidateAndCancel()
         urlSession = nil
         connectionState = .disconnected
         isConnected = false
     }
 
     func send(_ message: [String: Any]) {
-        guard let crypto else { return }
+        guard isConnected else {
+            print("[relay] Cannot send: not connected")
+            return
+        }
+        guard let crypto else {
+            print("[relay] Cannot send: no crypto service")
+            return
+        }
 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: message)
@@ -86,25 +98,44 @@ final class RelayService: ObservableObject {
                 if let error {
                     print("[relay] Send error: \(error.localizedDescription)")
                     Task { @MainActor in
-                        self?.handleDisconnect()
+                        self?.handleDisconnect(reason: "Send failed: \(error.localizedDescription)")
                     }
                 }
             }
         } catch {
-            print("[relay] Encryption error: \(error)")
+            print("[relay] Encryption/send error: \(error)")
+        }
+    }
+
+    private func sendPing() {
+        webSocketTask?.sendPing { [weak self] error in
+            Task { @MainActor in
+                guard let self else { return }
+                if let error {
+                    print("[relay] Connection failed: \(error.localizedDescription)")
+                    self.handleDisconnect(reason: "Connection failed: \(error.localizedDescription)")
+                } else {
+                    print("[relay] Connected successfully")
+                    self.connectionState = .connected
+                    self.isConnected = true
+                    self.reconnectAttempt = 0
+                    self.receiveMessage()
+                }
+            }
         }
     }
 
     private func receiveMessage() {
         webSocketTask?.receive { [weak self] result in
             Task { @MainActor in
+                guard let self else { return }
                 switch result {
                 case .success(let message):
-                    self?.processMessage(message)
-                    self?.receiveMessage()
+                    self.processMessage(message)
+                    self.receiveMessage()
                 case .failure(let error):
                     print("[relay] Receive error: \(error.localizedDescription)")
-                    self?.handleDisconnect()
+                    self.handleDisconnect(reason: error.localizedDescription)
                 }
             }
         }
@@ -144,15 +175,23 @@ final class RelayService: ObservableObject {
         }
     }
 
-    private func handleDisconnect() {
+    private func handleDisconnect(reason: String? = nil) {
         isConnected = false
-        connectionState = .disconnected
-        scheduleReconnect()
+        if let reason {
+            connectionState = .error(reason)
+        } else {
+            connectionState = .disconnected
+        }
+        if !isManuallyClosed {
+            scheduleReconnect()
+        }
     }
 
     private func scheduleReconnect() {
+        guard !isManuallyClosed else { return }
         let delay = min(pow(2.0, Double(reconnectAttempt)), 30.0)
         reconnectAttempt += 1
+        print("[relay] Reconnecting in \(delay)s (attempt \(reconnectAttempt))")
 
         reconnectWorkItem?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
