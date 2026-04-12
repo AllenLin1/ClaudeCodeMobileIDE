@@ -20,6 +20,7 @@ export class RelayClient extends EventEmitter {
   private opts: RelayClientOptions;
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private pingTimer: ReturnType<typeof setInterval> | null = null;
   private seq = 0;
   private peerAck = 0;
   private closed = false;
@@ -77,7 +78,9 @@ export class RelayClient extends EventEmitter {
       }
     });
 
-    this.ws.on("close", () => {
+    this.ws.on("close", (code, reason) => {
+      console.log(`[relay] WebSocket closed: code=${code} reason=${reason?.toString() || "none"}`);
+      this.stopPing();
       this.opts.onDisconnected?.();
       this.emit("disconnected");
       this.scheduleReconnect();
@@ -86,6 +89,8 @@ export class RelayClient extends EventEmitter {
     this.ws.on("error", (err) => {
       console.error("[relay] WebSocket error:", err.message);
     });
+
+    this.startPing();
   }
 
   send(message: any): void {
@@ -109,8 +114,25 @@ export class RelayClient extends EventEmitter {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
+  private startPing(): void {
+    this.stopPing();
+    this.pingTimer = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.ping();
+      }
+    }, 20_000);
+  }
+
+  private stopPing(): void {
+    if (this.pingTimer) {
+      clearInterval(this.pingTimer);
+      this.pingTimer = null;
+    }
+  }
+
   close(): void {
     this.closed = true;
+    this.stopPing();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
