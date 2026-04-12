@@ -48,15 +48,75 @@ struct SessionListView: View {
         }
     }
 
-    private var connectionIndicator: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(appState.isConnected ? Theme.statusActive : Theme.statusError)
-                .frame(width: 8, height: 8)
+    @State private var showConnectionAlert = false
 
-            Text(appState.isConnected ? "Connected" : "Disconnected")
-                .font(Theme.smallLabel)
-                .foregroundColor(Theme.textSecondary)
+    private var connectionIndicator: some View {
+        Button {
+            if !appState.isConnected {
+                showConnectionAlert = true
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(statusColor)
+                    .frame(width: 8, height: 8)
+
+                Text(statusText)
+                    .font(Theme.label)
+                    .foregroundColor(appState.isConnected ? Theme.statusActive : Theme.textSecondary)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                appState.isConnected
+                    ? Theme.statusActive.opacity(0.1)
+                    : Theme.bgSecondary
+            )
+            .clipShape(Capsule())
+        }
+        .alert("Connection Status", isPresented: $showConnectionAlert) {
+            Button("Retry") {
+                appState.connect()
+            }
+            Button("Re-pair Device") {
+                appState.unpair()
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(connectionAlertMessage)
+        }
+    }
+
+    private var statusColor: Color {
+        switch appState.connectionStatus {
+        case .connected: return Theme.statusActive
+        case .connecting: return Theme.statusWarning
+        case .disconnected: return Theme.statusError
+        case .error: return Theme.statusError
+        }
+    }
+
+    private var statusText: String {
+        switch appState.connectionStatus {
+        case .connected: return "Online"
+        case .connecting: return "Connecting..."
+        case .disconnected: return "Offline"
+        case .error: return "Error"
+        }
+    }
+
+    private var connectionAlertMessage: String {
+        if let error = appState.connectionError {
+            return "Connection error: \(error)\n\nMake sure the server and bridge are running."
+        }
+        switch appState.connectionStatus {
+        case .disconnected:
+            return "Not connected to the relay server.\n\nMake sure:\n1. Server is running (npx wrangler dev)\n2. Bridge is running (node bin/cli.js start)\n3. Your device is on the same network"
+        case .connecting:
+            return "Trying to connect..."
+        default:
+            return "Connection issue detected."
         }
     }
 
