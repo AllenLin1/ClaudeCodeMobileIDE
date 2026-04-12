@@ -6,6 +6,7 @@ struct OnboardingView: View {
     @State private var pairingCode = ""
     @State private var serverUrl = "http://localhost:8787"
     @State private var isConnecting = false
+    @State private var isScanning = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -49,7 +50,7 @@ struct OnboardingView: View {
         .animation(Theme.pageTransition, value: currentStep)
     }
 
-    // MARK: - Step 1
+    // MARK: - Step 1: Install Bridge
     private var step1View: some View {
         VStack(spacing: 24) {
             Image(systemName: "terminal")
@@ -82,7 +83,7 @@ struct OnboardingView: View {
             .clipShape(RoundedRectangle(cornerRadius: Theme.codeRadius))
             .padding(.horizontal, 32)
 
-            Text("A 6-character pairing code will appear.\nEnter it in the next step.")
+            Text("A 6-character pairing code and QR code\nwill appear in your terminal.")
                 .font(Theme.label)
                 .foregroundColor(Theme.textTertiary)
                 .multilineTextAlignment(.center)
@@ -104,186 +105,274 @@ struct OnboardingView: View {
         .padding(.horizontal, 16)
     }
 
-    // MARK: - Step 2: Enter Pairing Code
+    // MARK: - Step 2: Pair (QR Scan OR Code Input)
     private var step2View: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "link.circle.fill")
-                .font(.system(size: 48))
-                .foregroundColor(Theme.accent)
+        ScrollView {
+            VStack(spacing: 20) {
+                Image(systemName: "link.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(Theme.accent)
 
-            Text("Enter Pairing Code")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundColor(Theme.textPrimary)
-
-            Text("Type the 6-character code\nshown in your terminal.")
-                .font(Theme.body)
-                .foregroundColor(Theme.textSecondary)
-                .multilineTextAlignment(.center)
-
-            TextField("ABC123", text: $pairingCode)
-                .font(.system(size: 32, weight: .bold, design: .monospaced))
-                .foregroundColor(Theme.textPrimary)
-                .multilineTextAlignment(.center)
-                .textInputAutocapitalization(.characters)
-                .autocorrectionDisabled()
-                .padding(.vertical, 16)
-                .padding(.horizontal, 40)
-                .background(Theme.bgSecondary)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
-                .padding(.horizontal, 48)
-                .onChange(of: pairingCode) { _, newValue in
-                    pairingCode = String(newValue.prefix(6)).uppercased()
-                    errorMessage = nil
-                }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("SERVER")
-                    .font(Theme.smallLabel)
-                    .foregroundColor(Theme.textTertiary)
-
-                TextField("http://localhost:8787", text: $serverUrl)
-                    .font(Theme.code)
+                Text("Pair Your Device")
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundColor(Theme.textPrimary)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .padding(12)
-                    .background(Theme.bgSecondary)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.buttonRadius))
-            }
-            .padding(.horizontal, 32)
 
-            if let errorMessage {
-                HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                    Text(errorMessage)
-                }
-                .font(Theme.label)
-                .foregroundColor(Theme.statusError)
-                .padding(.horizontal, 32)
-                .multilineTextAlignment(.center)
-            }
-
-            Button {
-                connect()
-            } label: {
-                Group {
-                    if isConnecting {
-                        HStack(spacing: 8) {
-                            ProgressView().tint(.white)
-                            Text("Connecting...")
-                        }
-                    } else {
-                        Text("Connect")
-                    }
-                }
-                .font(Theme.cardTitle)
-                .foregroundColor(canConnect ? .white : Theme.textTertiary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(canConnect ? Theme.accent : Theme.bgElevated)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.buttonRadius))
-            }
-            .disabled(!canConnect || isConnecting)
-            .padding(.horizontal, 32)
-            .pressEffect()
-
-            Button {
-                withAnimation { currentStep = 0 }
-            } label: {
-                Text("Back")
-                    .font(Theme.label)
+                Text("Scan the QR code from your terminal\nor enter the pairing code manually.")
+                    .font(Theme.body)
                     .foregroundColor(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+
+                // Scan QR button
+                Button {
+                    isScanning = true
+                } label: {
+                    Label("Scan QR Code", systemImage: "qrcode.viewfinder")
+                        .font(Theme.cardTitle)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.buttonRadius))
+                }
+                .padding(.horizontal, 32)
+                .pressEffect()
+
+                // Divider
+                HStack {
+                    Rectangle().fill(Theme.bgElevated).frame(height: 1)
+                    Text("OR")
+                        .font(Theme.smallLabel)
+                        .foregroundColor(Theme.textTertiary)
+                        .fixedSize()
+                    Rectangle().fill(Theme.bgElevated).frame(height: 1)
+                }
+                .padding(.horizontal, 40)
+
+                // Pairing Code Input
+                VStack(spacing: 8) {
+                    Text("PAIRING CODE")
+                        .font(Theme.smallLabel)
+                        .foregroundColor(Theme.textTertiary)
+
+                    TextField("ABC123", text: $pairingCode)
+                        .font(.system(size: 32, weight: .bold, design: .monospaced))
+                        .foregroundColor(Theme.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .padding(.vertical, 16)
+                        .background(Theme.bgSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius))
+                        .padding(.horizontal, 48)
+                        .onChange(of: pairingCode) { _, newValue in
+                            pairingCode = String(newValue.prefix(6)).uppercased()
+                            errorMessage = nil
+                        }
+                }
+
+                // Server URL
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("SERVER")
+                        .font(Theme.smallLabel)
+                        .foregroundColor(Theme.textTertiary)
+
+                    TextField("http://localhost:8787", text: $serverUrl)
+                        .font(Theme.code)
+                        .foregroundColor(Theme.textPrimary)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .padding(12)
+                        .background(Theme.bgSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.buttonRadius))
+                }
+                .padding(.horizontal, 32)
+
+                // Error message
+                if let errorMessage {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                        Text(errorMessage)
+                    }
+                    .font(Theme.label)
+                    .foregroundColor(Theme.statusError)
+                    .padding(.horizontal, 32)
+                    .multilineTextAlignment(.center)
+                }
+
+                // Connect button
+                Button {
+                    connectWithCode()
+                } label: {
+                    Group {
+                        if isConnecting {
+                            HStack(spacing: 8) {
+                                ProgressView().tint(.white)
+                                Text("Connecting...")
+                            }
+                        } else {
+                            Text("Connect")
+                        }
+                    }
+                    .font(Theme.cardTitle)
+                    .foregroundColor(canConnect ? .white : Theme.textTertiary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(canConnect ? Theme.accent : Theme.bgElevated)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.buttonRadius))
+                }
+                .disabled(!canConnect || isConnecting)
+                .padding(.horizontal, 32)
+                .pressEffect()
+
+                Button {
+                    withAnimation { currentStep = 0 }
+                } label: {
+                    Text("Back")
+                        .font(Theme.label)
+                        .foregroundColor(Theme.textSecondary)
+                }
+                .padding(.bottom, 16)
+            }
+            .padding(.vertical, 20)
+        }
+        .sheet(isPresented: $isScanning) {
+            QRScannerView { scannedUrl in
+                isScanning = false
+                handleScannedUrl(scannedUrl)
             }
         }
-        .padding(.horizontal, 16)
     }
 
     private var canConnect: Bool {
         pairingCode.count == 6 && !serverUrl.isEmpty
     }
 
-    private func connect() {
+    // MARK: - Connect with Pairing Code
+
+    private func connectWithCode() {
         errorMessage = nil
         isConnecting = true
 
         Task {
             do {
-                let lookupUrl = "\(serverUrl)/pair/\(pairingCode.uppercased())"
-                guard let url = URL(string: lookupUrl) else {
-                    throw PairingError.invalidUrl
-                }
-
-                let (data, response) = try await URLSession.shared.data(from: url)
-                let httpResponse = response as? HTTPURLResponse
-
-                if httpResponse?.statusCode == 404 {
-                    throw PairingError.codeNotFound
-                }
-                guard httpResponse?.statusCode == 200 else {
-                    throw PairingError.serverError(httpResponse?.statusCode ?? 0)
-                }
-
-                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let roomId = json["roomId"] as? String,
-                      !roomId.isEmpty else {
-                    throw PairingError.invalidResponse
-                }
-
-                let bridgePk = json["bridgePublicKey"] as? String ?? ""
-
-                if !bridgePk.isEmpty {
-                    try? appState.cryptoService.deriveSharedKey(peerPublicKeyBase64: bridgePk)
-                }
-
-                UserDefaults.standard.set(roomId, forKey: "roomId")
-                UserDefaults.standard.set(serverUrl, forKey: "serverUrl")
-                UserDefaults.standard.set(bridgePk, forKey: "bridgePublicKey")
-
-                appState.relayService.connect(
-                    serverUrl: serverUrl,
-                    roomId: roomId,
-                    role: "app",
-                    crypto: appState.cryptoService
-                )
-
-                try await Task.sleep(nanoseconds: 2_000_000_000)
-
-                if appState.relayService.isConnected {
-                    isConnecting = false
-                    withAnimation { currentStep = 2 }
-                } else {
-                    throw PairingError.connectionFailed
-                }
-
+                let info = try await lookupPairingCode(pairingCode, serverUrl: serverUrl)
+                try await connectToRelay(roomId: info.roomId, bridgePk: info.bridgePublicKey, serverUrl: serverUrl)
+                isConnecting = false
+                withAnimation { currentStep = 2 }
             } catch let error as PairingError {
                 isConnecting = false
                 errorMessage = error.message
             } catch {
                 isConnecting = false
-                errorMessage = "Connection failed: \(error.localizedDescription)"
+                errorMessage = error.localizedDescription
             }
         }
     }
 
+    // MARK: - Connect with QR Scan
+
+    private func handleScannedUrl(_ urlString: String) {
+        guard let comps = URLComponents(string: urlString),
+              comps.scheme == "codepilot",
+              comps.host == "pair" else {
+            errorMessage = "Invalid QR code."
+            return
+        }
+
+        let items = comps.queryItems ?? []
+        let room = items.first(where: { $0.name == "room" })?.value ?? ""
+        let pk = items.first(where: { $0.name == "pk" })?.value ?? ""
+        let server = items.first(where: { $0.name == "server" })?.value ?? serverUrl
+
+        guard !room.isEmpty else {
+            errorMessage = "Invalid QR code: missing room ID."
+            return
+        }
+
+        if !server.isEmpty { serverUrl = server }
+        isConnecting = true
+        errorMessage = nil
+
+        Task {
+            do {
+                try await connectToRelay(roomId: room, bridgePk: pk, serverUrl: server)
+                isConnecting = false
+                withAnimation { currentStep = 2 }
+            } catch let error as PairingError {
+                isConnecting = false
+                errorMessage = error.message
+            } catch {
+                isConnecting = false
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    // MARK: - Shared Helpers
+
+    struct PairingInfo {
+        let roomId: String
+        let bridgePublicKey: String
+    }
+
+    private func lookupPairingCode(_ code: String, serverUrl: String) async throws -> PairingInfo {
+        let urlString = "\(serverUrl)/pair/\(code.uppercased())"
+        guard let url = URL(string: urlString) else {
+            throw PairingError.invalidUrl
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+        if status == 404 {
+            throw PairingError.codeNotFound
+        }
+        guard status == 200 else {
+            throw PairingError.serverError(status)
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let roomId = json["roomId"] as? String, !roomId.isEmpty else {
+            throw PairingError.invalidResponse
+        }
+
+        let pk = json["bridgePublicKey"] as? String ?? ""
+        return PairingInfo(roomId: roomId, bridgePublicKey: pk)
+    }
+
+    private func connectToRelay(roomId: String, bridgePk: String, serverUrl: String) async throws {
+        if !bridgePk.isEmpty {
+            try? appState.cryptoService.deriveSharedKey(peerPublicKeyBase64: bridgePk)
+        }
+
+        UserDefaults.standard.set(roomId, forKey: "roomId")
+        UserDefaults.standard.set(serverUrl, forKey: "serverUrl")
+        UserDefaults.standard.set(bridgePk, forKey: "bridgePublicKey")
+
+        appState.relayService.connect(
+            serverUrl: serverUrl,
+            roomId: roomId,
+            role: "app",
+            crypto: appState.cryptoService
+        )
+
+        try await Task.sleep(nanoseconds: 2_500_000_000)
+
+        if !appState.relayService.isConnected {
+            throw PairingError.connectionFailed
+        }
+    }
+
     enum PairingError: Error {
-        case invalidUrl
-        case codeNotFound
-        case serverError(Int)
-        case invalidResponse
-        case connectionFailed
+        case invalidUrl, codeNotFound, serverError(Int), invalidResponse, connectionFailed
 
         var message: String {
             switch self {
-            case .invalidUrl:
-                return "Invalid server URL."
-            case .codeNotFound:
-                return "Pairing code not found or expired.\nMake sure Bridge is running."
-            case .serverError(let code):
-                return "Server error (\(code)).\nCheck server is running."
-            case .invalidResponse:
-                return "Invalid response from server."
-            case .connectionFailed:
-                return "Could not connect to relay.\nCheck server and bridge are running."
+            case .invalidUrl: return "Invalid server URL."
+            case .codeNotFound: return "Pairing code not found or expired.\nMake sure Bridge is running."
+            case .serverError(let c): return "Server error (\(c)). Check server is running."
+            case .invalidResponse: return "Invalid server response."
+            case .connectionFailed: return "Could not connect to relay.\nCheck server and bridge are running."
             }
         }
     }

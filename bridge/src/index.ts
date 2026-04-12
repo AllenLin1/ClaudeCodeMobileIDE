@@ -127,28 +127,38 @@ export class Bridge {
       serverUrl: this.config.serverUrl,
     };
 
-    try {
-      const resp = await fetch(`${this.config.serverUrl}/pair/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: pairingCode,
-          roomId,
-          bridgePublicKey: this.crypto.getPublicKey(),
-          serverUrl: this.config.serverUrl,
-        }),
-      });
-      if (resp.ok) {
-        console.log(`[bridge] Pairing code registered with server (expires in 10 min)`);
-      } else {
-        console.warn("[bridge] Failed to register pairing code:", await resp.text());
-      }
-    } catch (err) {
-      console.warn("[bridge] Could not register pairing code:", err);
-    }
-
     displayQR(pairingInfo);
     this.relay.connect();
+
+    const registerPairing = async () => {
+      const url = `${this.config.serverUrl}/pair/register`;
+      const payload = {
+        code: pairingCode,
+        roomId,
+        bridgePublicKey: this.crypto.getPublicKey(),
+        serverUrl: this.config.serverUrl,
+      };
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (resp.ok) {
+            console.log(`[bridge] ✅ Pairing code ${pairingCode} registered (expires in 10 min)`);
+            return;
+          }
+          console.warn(`[bridge] Register attempt ${attempt} failed: ${resp.status} ${await resp.text()}`);
+        } catch (err: any) {
+          console.warn(`[bridge] Register attempt ${attempt} error: ${err.message}`);
+        }
+        if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
+      }
+      console.error("[bridge] ❌ Could not register pairing code after 3 attempts");
+      console.error("[bridge] App users can still connect manually with room ID:", roomId);
+    };
+    registerPairing();
 
     console.log("[bridge] Waiting for app connection...\n");
   }

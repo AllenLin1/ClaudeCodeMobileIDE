@@ -13,9 +13,8 @@ new_classes = ["RelayRoom"]
 
 [[kv_namespaces]]
 binding = "LICENSING_KV"
-id = "PLACEHOLDER_KV_ID"
-# For local dev, wrangler creates a local KV automatically.
-# Replace PLACEHOLDER_KV_ID with real ID after `wrangler kv:namespace create LICENSING_KV`
+id = "0000000000000000000000000000000000"
+preview_id = "0000000000000000000000000000000000"
 
 [vars]
 REVENUECAT_WEBHOOK_SECRET = ""
