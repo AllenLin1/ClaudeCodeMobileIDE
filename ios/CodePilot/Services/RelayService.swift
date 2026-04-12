@@ -81,7 +81,10 @@ final class RelayService: ObservableObject {
                 "ts": Int(Date().timeIntervalSince1970 * 1000),
             ]
 
-            if let crypto, let encrypted = try? crypto.encrypt(jsonString) {
+            let msgType = message["type"] as? String ?? ""
+            let forceUnencrypted = (msgType == "pair")
+
+            if !forceUnencrypted, let crypto, let encrypted = try? crypto.encrypt(jsonString) {
                 envelope["encrypted"] = [
                     "nonce": encrypted.nonce,
                     "ciphertext": encrypted.ciphertext,

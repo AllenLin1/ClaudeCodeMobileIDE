@@ -361,6 +361,11 @@ struct OnboardingView: View {
         if !appState.relayService.isConnected {
             throw PairingError.connectionFailed
         }
+
+        appState.relayService.send([
+            "type": "pair",
+            "appPublicKey": appState.cryptoService.publicKeyBase64,
+        ])
     }
 
     enum PairingError: Error {

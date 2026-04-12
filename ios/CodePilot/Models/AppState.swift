@@ -95,6 +95,14 @@ final class AppState: ObservableObject {
             role: "app",
             crypto: cryptoService
         )
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            guard let self, self.relayService.isConnected else { return }
+            self.relayService.send([
+                "type": "pair",
+                "appPublicKey": self.cryptoService.publicKeyBase64,
+            ])
+        }
     }
 
     func disconnect() {
