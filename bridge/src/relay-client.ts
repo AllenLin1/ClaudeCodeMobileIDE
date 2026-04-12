@@ -55,11 +55,15 @@ export class RelayClient extends EventEmitter {
           const msg = JSON.parse(envelope.plain);
           this.opts.onMessage(msg);
         } else if (envelope.encrypted) {
-          const decrypted = this.opts.crypto.decrypt(
-            envelope.encrypted as EncryptedPayload
-          );
-          const msg = JSON.parse(decrypted);
-          this.opts.onMessage(msg);
+          try {
+            const decrypted = this.opts.crypto.decrypt(
+              envelope.encrypted as EncryptedPayload
+            );
+            const msg = JSON.parse(decrypted);
+            this.opts.onMessage(msg);
+          } catch (decErr: any) {
+            console.error("[relay] Decryption failed:", decErr.message);
+          }
         }
       } catch (err) {
         console.error("[relay] Failed to process message:", err);
@@ -84,12 +88,13 @@ export class RelayClient extends EventEmitter {
     }
     this.seq++;
     const plaintext = JSON.stringify(message);
-    const envelope = {
-      seq: this.seq,
-      ack: this.peerAck,
-      ts: Date.now(),
-      plain: plaintext,
-    };
+    let envelope: any;
+    try {
+      const encrypted = this.opts.crypto.encrypt(plaintext);
+      envelope = { seq: this.seq, ack: this.peerAck, ts: Date.now(), encrypted };
+    } catch {
+      envelope = { seq: this.seq, ack: this.peerAck, ts: Date.now(), plain: plaintext };
+    }
     this.ws.send(JSON.stringify(envelope));
   }
 

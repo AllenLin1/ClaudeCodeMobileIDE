@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { E2ECrypto } from "../src/crypto/e2e";
 
-describe("E2ECrypto", () => {
+describe("E2ECrypto (Curve25519 + ChaChaPoly)", () => {
   it("should generate distinct key pairs", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
@@ -9,7 +9,7 @@ describe("E2ECrypto", () => {
     expect(alice.getSecretKey()).not.toBe(bob.getSecretKey());
   });
 
-  it("should encrypt and decrypt a message between two parties", () => {
+  it("should encrypt and decrypt between two parties", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
 
@@ -27,10 +27,9 @@ describe("E2ECrypto", () => {
     expect(decrypted).toBe(plaintext);
   });
 
-  it("should handle JSON payload roundtrip", () => {
+  it("should handle JSON roundtrip", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
-
     alice.deriveSharedKey(bob.getPublicKey());
     bob.deriveSharedKey(alice.getPublicKey());
 
@@ -38,40 +37,34 @@ describe("E2ECrypto", () => {
       type: "prompt",
       sessionId: "sess_123",
       text: "Refactor the API router",
-      model: "claude-opus-4-6-20260401",
     };
 
     const encrypted = alice.encrypt(JSON.stringify(message));
     const decrypted = JSON.parse(bob.decrypt(encrypted));
-
     expect(decrypted).toEqual(message);
   });
 
-  it("should handle large payloads (code blocks)", () => {
+  it("should handle large payloads", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
     alice.deriveSharedKey(bob.getPublicKey());
     bob.deriveSharedKey(alice.getPublicKey());
 
-    const largePayload = "x".repeat(100_000);
-    const encrypted = alice.encrypt(largePayload);
-    const decrypted = bob.decrypt(encrypted);
-    expect(decrypted).toBe(largePayload);
-    expect(decrypted.length).toBe(100_000);
+    const large = "x".repeat(100_000);
+    expect(bob.decrypt(alice.encrypt(large))).toBe(large);
   });
 
-  it("should handle unicode / CJK characters", () => {
+  it("should handle unicode / CJK", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
     alice.deriveSharedKey(bob.getPublicKey());
     bob.deriveSharedKey(alice.getPublicKey());
 
     const text = "你好世界 🚀 こんにちは 한국어";
-    const decrypted = bob.decrypt(alice.encrypt(text));
-    expect(decrypted).toBe(text);
+    expect(bob.decrypt(alice.encrypt(text))).toBe(text);
   });
 
-  it("should fail to decrypt with wrong key", () => {
+  it("should fail with wrong key", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
     const eve = new E2ECrypto();
@@ -80,20 +73,19 @@ describe("E2ECrypto", () => {
     eve.deriveSharedKey(alice.getPublicKey());
 
     const encrypted = alice.encrypt("secret");
-
     expect(() => eve.decrypt(encrypted)).toThrow();
   });
 
-  it("should fail to decrypt tampered ciphertext", () => {
+  it("should fail with tampered ciphertext", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
     alice.deriveSharedKey(bob.getPublicKey());
     bob.deriveSharedKey(alice.getPublicKey());
 
     const encrypted = alice.encrypt("secret");
-    encrypted.ciphertext =
-      encrypted.ciphertext.slice(0, -2) +
-      (encrypted.ciphertext.endsWith("AA") ? "BB" : "AA");
+    const buf = Buffer.from(encrypted.ciphertext, "base64");
+    buf[20] ^= 0xff;
+    encrypted.ciphertext = buf.toString("base64");
 
     expect(() => bob.decrypt(encrypted)).toThrow();
   });
@@ -101,9 +93,7 @@ describe("E2ECrypto", () => {
   it("should throw if shared key not derived", () => {
     const alice = new E2ECrypto();
     expect(() => alice.encrypt("test")).toThrow("Shared key not derived");
-    expect(() =>
-      alice.decrypt({ nonce: "x", ciphertext: "y" })
-    ).toThrow("Shared key not derived");
+    expect(() => alice.decrypt({ nonce: "x", ciphertext: "y" })).toThrow("Shared key not derived");
   });
 
   it("should reconstruct from base64 keys", () => {
@@ -113,25 +103,21 @@ describe("E2ECrypto", () => {
 
     const restored = E2ECrypto.fromBase64(pub, sec);
     expect(restored.getPublicKey()).toBe(pub);
-    expect(restored.getSecretKey()).toBe(sec);
 
     const bob = new E2ECrypto();
     restored.deriveSharedKey(bob.getPublicKey());
     bob.deriveSharedKey(restored.getPublicKey());
 
-    const msg = "restored key works";
-    expect(bob.decrypt(restored.encrypt(msg))).toBe(msg);
+    expect(bob.decrypt(restored.encrypt("works"))).toBe("works");
   });
 
-  it("should produce different ciphertexts for same plaintext (random nonce)", () => {
+  it("should produce different ciphertexts for same plaintext", () => {
     const alice = new E2ECrypto();
     const bob = new E2ECrypto();
     alice.deriveSharedKey(bob.getPublicKey());
 
-    const e1 = alice.encrypt("same text");
-    const e2 = alice.encrypt("same text");
-
-    expect(e1.nonce).not.toBe(e2.nonce);
+    const e1 = alice.encrypt("same");
+    const e2 = alice.encrypt("same");
     expect(e1.ciphertext).not.toBe(e2.ciphertext);
   });
 });

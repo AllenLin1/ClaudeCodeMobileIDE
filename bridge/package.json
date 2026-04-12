@@ -19,8 +19,6 @@
     "dotenv": "^16.0.0",
     "jose": "^6.0.0",
     "qrcode-terminal": "^0.12.0",
-    "tweetnacl": "^1.0.3",
-    "tweetnacl-util": "^0.15.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {

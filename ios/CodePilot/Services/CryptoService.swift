@@ -1,8 +1,12 @@
 import Foundation
 import CryptoKit
 
-/// E2E encryption using Curve25519 + ChaChaPoly (Apple CryptoKit equivalent of NaCl box).
-/// Interoperable with tweetnacl on the bridge side via shared secret derivation.
+/// E2E encryption using Curve25519 key exchange + ChaChaPoly symmetric encryption.
+/// Compatible with Bridge's Node.js crypto module using the same primitives:
+///   - Key exchange: X25519 (Curve25519 Diffie-Hellman)
+///   - Key derivation: HKDF-SHA256 with salt "CodePilot-E2E"
+///   - Encryption: ChaCha20-Poly1305 (12-byte nonce, 16-byte tag)
+///   - Ciphertext format: nonce(12) + encrypted + tag(16), base64 encoded
 final class CryptoService {
     private let privateKey: Curve25519.KeyAgreement.PrivateKey
     let publicKey: Curve25519.KeyAgreement.PublicKey
@@ -40,9 +44,16 @@ final class CryptoService {
         guard let key = sharedSymmetricKey else { throw CryptoError.noSharedKey }
         let data = Data(plaintext.utf8)
         let sealedBox = try ChaChaPoly.seal(data, using: key)
+
+        // Format: nonce(12) + ciphertext + tag(16) — matches Node.js layout
+        var combined = Data()
+        combined.append(contentsOf: sealedBox.nonce)
+        combined.append(sealedBox.ciphertext)
+        combined.append(sealedBox.tag)
+
         return EncryptedPayload(
-            nonce: sealedBox.nonce.withUnsafeBytes { Data($0).base64EncodedString() },
-            ciphertext: sealedBox.combined.base64EncodedString()
+            nonce: Data(sealedBox.nonce).base64EncodedString(),
+            ciphertext: combined.base64EncodedString()
         )
     }
 
@@ -51,8 +62,20 @@ final class CryptoService {
         guard let combined = Data(base64Encoded: payload.ciphertext) else {
             throw CryptoError.invalidData
         }
-        let sealedBox = try ChaChaPoly.SealedBox(combined: combined)
+
+        guard combined.count > 12 + 16 else { throw CryptoError.invalidData }
+
+        let nonce = combined[0..<12]
+        let ciphertext = combined[12..<(combined.count - 16)]
+        let tag = combined[(combined.count - 16)...]
+
+        let sealedBox = try ChaChaPoly.SealedBox(
+            nonce: ChaChaPoly.Nonce(data: nonce),
+            ciphertext: ciphertext,
+            tag: tag
+        )
         let decrypted = try ChaChaPoly.open(sealedBox, using: key)
+
         guard let result = String(data: decrypted, encoding: .utf8) else {
             throw CryptoError.invalidData
         }
@@ -92,10 +115,20 @@ struct EncryptedPayload: Codable {
     let ciphertext: String
 }
 
-enum CryptoError: Error {
+enum CryptoError: Error, LocalizedError {
     case invalidKey
     case noSharedKey
     case invalidData
     case encryptionFailed
     case decryptionFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidKey: return "Invalid encryption key"
+        case .noSharedKey: return "Encryption not initialized (no shared key)"
+        case .invalidData: return "Encrypted data is corrupted"
+        case .encryptionFailed: return "Encryption failed"
+        case .decryptionFailed: return "Decryption failed"
+        }
+    }
 }

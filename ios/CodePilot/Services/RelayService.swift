@@ -75,12 +75,20 @@ final class RelayService: ObservableObject {
             guard let jsonString = String(data: jsonData, encoding: .utf8) else { return }
 
             seq += 1
-            let envelope: [String: Any] = [
+            var envelope: [String: Any] = [
                 "seq": seq,
                 "ack": peerAck,
                 "ts": Int(Date().timeIntervalSince1970 * 1000),
-                "plain": jsonString,
             ]
+
+            if let crypto, let encrypted = try? crypto.encrypt(jsonString) {
+                envelope["encrypted"] = [
+                    "nonce": encrypted.nonce,
+                    "ciphertext": encrypted.ciphertext,
+                ]
+            } else {
+                envelope["plain"] = jsonString
+            }
 
             let envelopeData = try JSONSerialization.data(withJSONObject: envelope)
             guard let envelopeString = String(data: envelopeData, encoding: .utf8) else { return }
