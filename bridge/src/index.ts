@@ -250,8 +250,14 @@ export class Bridge {
           break;
         default:
           console.warn("[bridge] Unknown message type:", msg.type);
+          this.sendToApp({
+            type: "error",
+            code: "UNKNOWN_TYPE",
+            message: `Unknown message type: ${msg.type}`,
+          });
       }
     } catch (err: any) {
+      console.error("[bridge] Error handling message:", err);
       this.sendToApp({
         type: "error",
         code: "BRIDGE_ERROR",
@@ -346,6 +352,8 @@ export class Bridge {
   }
 
   private async handlePrompt(msg: any): Promise<void> {
+    console.log(`[bridge] handlePrompt: sessionId=${msg.sessionId}, text="${(msg.text || "").slice(0, 50)}"`);
+
     if (!this.enforcer?.canSendPrompt()) {
       this.sendToApp({
         type: "tier:limit",
@@ -355,30 +363,53 @@ export class Bridge {
       return;
     }
 
-    if (msg.model && !this.enforcer?.canSelectModel()) {
+    if (!this.sessionManager) {
+      console.error("[bridge] SessionManager not initialized");
       this.sendToApp({
-        type: "tier:limit",
-        feature: "model_select",
-        message: "Model selection is a Pro feature.",
+        type: "error",
+        code: "NO_SESSION_MANAGER",
+        message: "Bridge not ready. Please restart the bridge.",
       });
       return;
     }
 
-    if (this.enforcer?.isFree) {
-      try {
-        await fetch(`${this.config.serverUrl}/usage`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${this.currentJWT}`,
-          },
+    const sessions = this.sessionManager.listSessions();
+    const exists = sessions.find(s => s.id === msg.sessionId);
+    if (!exists) {
+      console.log(`[bridge] Session ${msg.sessionId} not found, auto-creating`);
+      this.sessionManager.createSession(
+        msg.name || "Chat",
+        msg.cwd || process.cwd(),
+        msg.model || "default"
+      );
+      const newSessions = this.sessionManager.listSessions();
+      const created = newSessions[0];
+      if (created) {
+        console.log(`[bridge] Auto-created session: ${created.id}`);
+        msg.sessionId = created.id;
+        this.sendToApp({
+          type: "session:created",
+          sessionId: created.id,
+          originalSessionId: msg.sessionId,
+          name: created.name,
         });
-      } catch {
-        // continue even if usage tracking fails
       }
     }
 
-    await this.sessionManager?.sendPrompt(msg.sessionId, msg.text);
+    try {
+      await this.sessionManager.sendPrompt(msg.sessionId, msg.text);
+    } catch (err: any) {
+      console.error(`[bridge] sendPrompt error:`, err.message);
+      this.sendToApp({
+        type: "sdk:result",
+        sessionId: msg.sessionId,
+        message: {
+          type: "result",
+          sessionId: msg.sessionId,
+          content: `Bridge received your message: "${msg.text}"\n\nClaude Agent SDK is not installed. To enable AI responses:\n  cd bridge && npm install @anthropic-ai/claude-code\n  export ANTHROPIC_API_KEY=sk-ant-...\n  node bin/cli.js start --server http://localhost:8787`,
+        },
+      });
+    }
   }
 
   private handleListSessions(): void {

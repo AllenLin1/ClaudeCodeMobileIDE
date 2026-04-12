@@ -46,15 +46,18 @@ export class RelayClient extends EventEmitter {
         this.ws?.send("pong");
         return;
       }
+      console.log(`[relay] Raw message received (${raw.length} bytes)`);
       try {
         const envelope = JSON.parse(raw);
         if (envelope.ack !== undefined) {
           this.peerAck = envelope.ack;
         }
         if (envelope.plain) {
+          console.log("[relay] Processing plain message");
           const msg = JSON.parse(envelope.plain);
           this.opts.onMessage(msg);
         } else if (envelope.encrypted) {
+          console.log("[relay] Processing encrypted message");
           try {
             const decrypted = this.opts.crypto.decrypt(
               envelope.encrypted as EncryptedPayload
@@ -63,7 +66,11 @@ export class RelayClient extends EventEmitter {
             this.opts.onMessage(msg);
           } catch (decErr: any) {
             console.error("[relay] Decryption failed:", decErr.message);
+            console.error("[relay] This usually means the App and Bridge have not exchanged encryption keys.");
+            console.error("[relay] The App may need to re-pair with the Bridge.");
           }
+        } else {
+          console.warn("[relay] Message has neither 'plain' nor 'encrypted' field");
         }
       } catch (err) {
         console.error("[relay] Failed to process message:", err);
