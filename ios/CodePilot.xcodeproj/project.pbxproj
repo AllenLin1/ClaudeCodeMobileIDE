@@ -1,0 +1,585 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10001 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10001; };
+		A10002 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10002; };
+		A10003 /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10003; };
+		A10004 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10004; };
+		A10005 /* SessionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10005; };
+		A10006 /* CodeBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10006; };
+		A10007 /* ToolCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10007; };
+		A10008 /* ApprovalCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10008; };
+		A10009 /* QuestionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10009; };
+		A1000A /* DiffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000A; };
+		A1000B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000B; };
+		A1000C /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000C; };
+		A1000D /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000D; };
+		A1000E /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000E; };
+		A1000F /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000F; };
+		A10010 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10010; };
+		A10011 /* MessageBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10011; };
+		A10012 /* ChatInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10012; };
+		A10013 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10013; };
+		A10014 /* FileTreeNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10014; };
+		A10015 /* FileViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10015; };
+		A10016 /* GitPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10016; };
+		A10017 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10017; };
+		A10018 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10018; };
+		A10019 /* RelayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10019; };
+		A1001A /* LicensingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1001A; };
+		A1001B /* RevenueCatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1001B; };
+		A1001C /* CryptoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1001C; };
+		A1001D /* PushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1001D; };
+		A1001E /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1001E; };
+		A1001F /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1001F; };
+		A10020 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10020; };
+		A10021 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10021; };
+		A10022 /* Subscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10022; };
+		A10023 /* MessageMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10023; };
+		A10024 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10024; };
+		A10025 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10025; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		C10001 /* CodePilot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodePilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10001 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		B10002 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		B10003 /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
+		B10004 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		B10005 /* SessionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCard.swift; sourceTree = "<group>"; };
+		B10006 /* CodeBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlock.swift; sourceTree = "<group>"; };
+		B10007 /* ToolCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCard.swift; sourceTree = "<group>"; };
+		B10008 /* ApprovalCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalCard.swift; sourceTree = "<group>"; };
+		B10009 /* QuestionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionCard.swift; sourceTree = "<group>"; };
+		B1000A /* DiffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffView.swift; sourceTree = "<group>"; };
+		B1000B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		B1000C /* PairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingView.swift; sourceTree = "<group>"; };
+		B1000D /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		B1000E /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
+		B1000F /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
+		B10010 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		B10011 /* MessageBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubble.swift; sourceTree = "<group>"; };
+		B10012 /* ChatInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputBar.swift; sourceTree = "<group>"; };
+		B10013 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
+		B10014 /* FileTreeNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTreeNode.swift; sourceTree = "<group>"; };
+		B10015 /* FileViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileViewerView.swift; sourceTree = "<group>"; };
+		B10016 /* GitPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPanelView.swift; sourceTree = "<group>"; };
+		B10017 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B10018 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		B10019 /* RelayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelayService.swift; sourceTree = "<group>"; };
+		B1001A /* LicensingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicensingService.swift; sourceTree = "<group>"; };
+		B1001B /* RevenueCatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevenueCatService.swift; sourceTree = "<group>"; };
+		B1001C /* CryptoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoService.swift; sourceTree = "<group>"; };
+		B1001D /* PushService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushService.swift; sourceTree = "<group>"; };
+		B1001E /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		B1001F /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
+		B10020 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		B10021 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		B10022 /* Subscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subscription.swift; sourceTree = "<group>"; };
+		B10023 /* MessageMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageMapper.swift; sourceTree = "<group>"; };
+		B10024 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+		B10025 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B10026 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E10001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D10000 = {
+			isa = PBXGroup;
+			children = (
+				D10001 /* CodePilot */,
+				D10099 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D10099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C10001 /* CodePilot.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D10001 /* CodePilot */ = {
+			isa = PBXGroup;
+			children = (
+				B10001 /* App.swift */,
+				D10002 /* Design */,
+				D10003 /* Features */,
+				D10008 /* Services */,
+				D10009 /* Models */,
+				D1000A /* Utilities */,
+				D1000B /* Resources */,
+				B10026 /* Info.plist */,
+			);
+			path = CodePilot;
+			sourceTree = "<group>";
+		};
+		D10002 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				B10002 /* Theme.swift */,
+				B10003 /* Animations.swift */,
+				D10002C /* Components */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		D10002C /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				B10004 /* StatusBadge.swift */,
+				B10005 /* SessionCard.swift */,
+				B10006 /* CodeBlock.swift */,
+				B10007 /* ToolCard.swift */,
+				B10008 /* ApprovalCard.swift */,
+				B10009 /* QuestionCard.swift */,
+				B1000A /* DiffView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		D10003 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				D10004 /* Onboarding */,
+				D10005 /* Sessions */,
+				D10006 /* Chat */,
+				D10007 /* Files */,
+				D10007S /* Settings */,
+				D10007P /* Paywall */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		D10004 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				B1000B /* OnboardingView.swift */,
+				B1000C /* PairingView.swift */,
+				B1000D /* QRScannerView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		D10005 /* Sessions */ = {
+			isa = PBXGroup;
+			children = (
+				B1000E /* SessionListView.swift */,
+				B1000F /* NewSessionView.swift */,
+			);
+			path = Sessions;
+			sourceTree = "<group>";
+		};
+		D10006 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				B10010 /* ChatView.swift */,
+				B10011 /* MessageBubble.swift */,
+				B10012 /* ChatInputBar.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		D10007 /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				B10013 /* FileBrowserView.swift */,
+				B10014 /* FileTreeNode.swift */,
+				B10015 /* FileViewerView.swift */,
+				B10016 /* GitPanelView.swift */,
+			);
+			path = Files;
+			sourceTree = "<group>";
+		};
+		D10007S /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B10017 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		D10007P /* Paywall */ = {
+			isa = PBXGroup;
+			children = (
+				B10018 /* PaywallView.swift */,
+			);
+			path = Paywall;
+			sourceTree = "<group>";
+		};
+		D10008 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B10019 /* RelayService.swift */,
+				B1001A /* LicensingService.swift */,
+				B1001B /* RevenueCatService.swift */,
+				B1001C /* CryptoService.swift */,
+				B1001D /* PushService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		D10009 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B1001E /* AppState.swift */,
+				B1001F /* Device.swift */,
+				B10020 /* Session.swift */,
+				B10021 /* Message.swift */,
+				B10022 /* Subscription.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D1000A /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				B10023 /* MessageMapper.swift */,
+				B10024 /* SyntaxHighlighter.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		D1000B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B10025 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F10001 /* CodePilot */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F10002;
+			buildPhases = (
+				F10003 /* Sources */,
+				F10004 /* Resources */,
+				E10001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CodePilot;
+			productName = CodePilot;
+			productReference = C10001 /* CodePilot.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F10000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					F10001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = F10005;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D10000;
+			productRefGroup = D10099 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F10001 /* CodePilot */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F10004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10025 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F10003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10001 /* App.swift in Sources */,
+				A10002 /* Theme.swift in Sources */,
+				A10003 /* Animations.swift in Sources */,
+				A10004 /* StatusBadge.swift in Sources */,
+				A10005 /* SessionCard.swift in Sources */,
+				A10006 /* CodeBlock.swift in Sources */,
+				A10007 /* ToolCard.swift in Sources */,
+				A10008 /* ApprovalCard.swift in Sources */,
+				A10009 /* QuestionCard.swift in Sources */,
+				A1000A /* DiffView.swift in Sources */,
+				A1000B /* OnboardingView.swift in Sources */,
+				A1000C /* PairingView.swift in Sources */,
+				A1000D /* QRScannerView.swift in Sources */,
+				A1000E /* SessionListView.swift in Sources */,
+				A1000F /* NewSessionView.swift in Sources */,
+				A10010 /* ChatView.swift in Sources */,
+				A10011 /* MessageBubble.swift in Sources */,
+				A10012 /* ChatInputBar.swift in Sources */,
+				A10013 /* FileBrowserView.swift in Sources */,
+				A10014 /* FileTreeNode.swift in Sources */,
+				A10015 /* FileViewerView.swift in Sources */,
+				A10016 /* GitPanelView.swift in Sources */,
+				A10017 /* SettingsView.swift in Sources */,
+				A10018 /* PaywallView.swift in Sources */,
+				A10019 /* RelayService.swift in Sources */,
+				A1001A /* LicensingService.swift in Sources */,
+				A1001B /* RevenueCatService.swift in Sources */,
+				A1001C /* CryptoService.swift in Sources */,
+				A1001D /* PushService.swift in Sources */,
+				A1001E /* AppState.swift in Sources */,
+				A1001F /* Device.swift in Sources */,
+				A10020 /* Session.swift in Sources */,
+				A10021 /* Message.swift in Sources */,
+				A10022 /* Subscription.swift in Sources */,
+				A10023 /* MessageMapper.swift in Sources */,
+				A10024 /* SyntaxHighlighter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F10006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F10007 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F10008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CodePilot/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CodePilot;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codepilot.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F10009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CodePilot/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CodePilot;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codepilot.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F10005 /* Build configuration list for PBXProject */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F10006 /* Debug */,
+				F10007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F10002 /* Build configuration list for PBXNativeTarget */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F10008 /* Debug */,
+				F10009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F10000 /* Project object */;
+}
