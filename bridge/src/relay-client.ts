@@ -51,7 +51,10 @@ export class RelayClient extends EventEmitter {
         if (envelope.ack !== undefined) {
           this.peerAck = envelope.ack;
         }
-        if (envelope.encrypted) {
+        if (envelope.plain) {
+          const msg = JSON.parse(envelope.plain);
+          this.opts.onMessage(msg);
+        } else if (envelope.encrypted) {
           const decrypted = this.opts.crypto.decrypt(
             envelope.encrypted as EncryptedPayload
           );
@@ -81,12 +84,11 @@ export class RelayClient extends EventEmitter {
     }
     this.seq++;
     const plaintext = JSON.stringify(message);
-    const encrypted = this.opts.crypto.encrypt(plaintext);
     const envelope = {
       seq: this.seq,
       ack: this.peerAck,
       ts: Date.now(),
-      encrypted,
+      plain: plaintext,
     };
     this.ws.send(JSON.stringify(envelope));
   }

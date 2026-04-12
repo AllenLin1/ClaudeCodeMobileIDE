@@ -69,30 +69,23 @@ final class RelayService: ObservableObject {
             print("[relay] Cannot send: not connected")
             return
         }
-        guard let crypto else {
-            print("[relay] Cannot send: no crypto service")
-            return
-        }
 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: message)
             guard let jsonString = String(data: jsonData, encoding: .utf8) else { return }
-
-            let encrypted = try crypto.encrypt(jsonString)
 
             seq += 1
             let envelope: [String: Any] = [
                 "seq": seq,
                 "ack": peerAck,
                 "ts": Int(Date().timeIntervalSince1970 * 1000),
-                "encrypted": [
-                    "nonce": encrypted.nonce,
-                    "ciphertext": encrypted.ciphertext,
-                ]
+                "plain": jsonString,
             ]
 
             let envelopeData = try JSONSerialization.data(withJSONObject: envelope)
             guard let envelopeString = String(data: envelopeData, encoding: .utf8) else { return }
+
+            print("[relay] Sending: \(message["type"] as? String ?? "unknown")")
 
             webSocketTask?.send(.string(envelopeString)) { [weak self] error in
                 if let error {
@@ -103,7 +96,7 @@ final class RelayService: ObservableObject {
                 }
             }
         } catch {
-            print("[relay] Encryption/send error: \(error)")
+            print("[relay] Send error: \(error)")
         }
     }
 
@@ -156,7 +149,10 @@ final class RelayService: ObservableObject {
                 peerAck = ack
             }
 
-            if let encryptedDict = envelope["encrypted"] as? [String: String],
+            if let plain = envelope["plain"] as? String,
+               let plainData = plain.data(using: .utf8) {
+                onMessage?(plainData)
+            } else if let encryptedDict = envelope["encrypted"] as? [String: String],
                let nonce = encryptedDict["nonce"],
                let ciphertext = encryptedDict["ciphertext"],
                let crypto {
