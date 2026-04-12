@@ -204,7 +204,7 @@ export class Bridge {
         this.sendToApp({
           type: "tier:limit",
           feature: "subscription",
-          message: "Subscription expired. Please renew to continue.",
+          errorMessage: "Subscription expired. Please renew to continue.",
         });
         return;
       }
@@ -253,7 +253,7 @@ export class Bridge {
           this.sendToApp({
             type: "error",
             code: "UNKNOWN_TYPE",
-            message: `Unknown message type: ${msg.type}`,
+            errorMessage: `Unknown message type: ${msg.type}`,
           });
       }
     } catch (err: any) {
@@ -261,7 +261,7 @@ export class Bridge {
       this.sendToApp({
         type: "error",
         code: "BRIDGE_ERROR",
-        message: err.message || "Unknown bridge error",
+        errorMessage: err.message || "Unknown bridge error",
       });
     }
   }
@@ -330,7 +330,7 @@ export class Bridge {
       this.sendToApp({
         type: "tier:limit",
         feature: "multi_session",
-        message: "Session limit reached. Upgrade to Pro.",
+        errorMessage: "Session limit reached. Upgrade to Pro.",
       });
       return;
     }
@@ -358,7 +358,7 @@ export class Bridge {
       this.sendToApp({
         type: "tier:limit",
         feature: "prompt",
-        message: "Free tier limit reached. Upgrade to Pro for unlimited usage.",
+        errorMessage: "Free tier limit reached. Upgrade to Pro for unlimited usage.",
       });
       return;
     }
@@ -368,7 +368,7 @@ export class Bridge {
       this.sendToApp({
         type: "error",
         code: "NO_SESSION_MANAGER",
-        message: "Bridge not ready. Please restart the bridge.",
+        errorMessage: "Bridge not ready. Please restart the bridge.",
       });
       return;
     }
@@ -386,11 +386,12 @@ export class Bridge {
       const created = newSessions[0];
       if (created) {
         console.log(`[bridge] Auto-created session: ${created.id}`);
+        const originalSessionId = msg.sessionId;
         msg.sessionId = created.id;
         this.sendToApp({
           type: "session:created",
           sessionId: created.id,
-          originalSessionId: msg.sessionId,
+          originalSessionId,
           name: created.name,
         });
       }
@@ -422,7 +423,7 @@ export class Bridge {
       this.sendToApp({
         type: "tier:limit",
         feature: "file_browser",
-        message: "File browser is a Pro feature.",
+        errorMessage: "File browser is a Pro feature.",
       });
       return;
     }
@@ -435,7 +436,7 @@ export class Bridge {
       this.sendToApp({
         type: "tier:limit",
         feature: "file_browser",
-        message: "File browser is a Pro feature.",
+        errorMessage: "File browser is a Pro feature.",
       });
       return;
     }
@@ -448,7 +449,7 @@ export class Bridge {
       this.sendToApp({
         type: "tier:limit",
         feature: "git",
-        message: "Git integration is a Pro feature.",
+        errorMessage: "Git integration is a Pro feature.",
       });
       return;
     }
@@ -461,7 +462,7 @@ export class Bridge {
       this.sendToApp({
         type: "tier:limit",
         feature: "git",
-        message: "Git integration is a Pro feature.",
+        errorMessage: "Git integration is a Pro feature.",
       });
       return;
     }
@@ -474,7 +475,7 @@ export class Bridge {
       this.sendToApp({
         type: "tier:limit",
         feature: "git",
-        message: "Git integration is a Pro feature.",
+        errorMessage: "Git integration is a Pro feature.",
       });
       return;
     }

@@ -77,11 +77,21 @@ export class SessionManager {
       this.buffer.saveMessage(id, msg);
       this.buffer.saveSession(info);
 
-      this.sendToApp({
-        type: `sdk:${msg.type === "tool_use" ? "message" : msg.type}`,
-        sessionId: id,
-        message: msg,
-      });
+      if (msg.type === "tool_use") {
+        this.sendToApp({
+          type: "sdk:tool_use",
+          sessionId: id,
+          toolName: msg.toolName,
+          toolInput: msg.toolInput,
+          message: msg,
+        });
+      } else {
+        this.sendToApp({
+          type: `sdk:${msg.type}`,
+          sessionId: id,
+          message: msg,
+        });
+      }
     });
 
     this.sessions.set(id, runner);
@@ -115,11 +125,21 @@ export class SessionManager {
         info.lastMessage = msg.content?.slice(0, 100) || msg.toolName || "...";
         this.buffer.saveMessage(sessionId, msg);
         this.buffer.saveSession(info);
-        this.sendToApp({
-          type: `sdk:${msg.type === "tool_use" ? "message" : msg.type}`,
-          sessionId,
-          message: msg,
-        });
+        if (msg.type === "tool_use") {
+          this.sendToApp({
+            type: "sdk:tool_use",
+            sessionId,
+            toolName: msg.toolName,
+            toolInput: msg.toolInput,
+            message: msg,
+          });
+        } else {
+          this.sendToApp({
+            type: `sdk:${msg.type}`,
+            sessionId,
+            message: msg,
+          });
+        }
       });
       this.sessions.set(sessionId, runner);
     }
@@ -137,7 +157,13 @@ export class SessionManager {
     if (msg.type === "interrupt" && msg.sessionId) {
       const runner = this.sessions.get(msg.sessionId);
       runner?.interrupt();
+      return;
     }
+
+    console.warn(`[session-manager] Unhandled app message type: ${msg.type}`, {
+      sessionId: msg.sessionId,
+      type: msg.type,
+    });
   }
 
   listSessions(): SessionInfo[] {
