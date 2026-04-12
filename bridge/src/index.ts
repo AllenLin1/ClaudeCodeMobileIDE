@@ -127,38 +127,41 @@ export class Bridge {
       serverUrl: this.config.serverUrl,
     };
 
+    console.log(`[bridge] Registering pairing code ${pairingCode} with server...`);
+    const regUrl = `${this.config.serverUrl}/pair/register`;
+    const regPayload = JSON.stringify({
+      code: pairingCode,
+      roomId,
+      bridgePublicKey: this.crypto.getPublicKey(),
+      serverUrl: this.config.serverUrl,
+    });
+    let registered = false;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const resp = await fetch(regUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: regPayload,
+        });
+        if (resp.ok) {
+          console.log(`[bridge] Pairing code registered OK`);
+          registered = true;
+          break;
+        }
+        const text = await resp.text();
+        console.warn(`[bridge] Register attempt ${attempt} failed: ${resp.status} ${text}`);
+      } catch (err: any) {
+        console.warn(`[bridge] Register attempt ${attempt} error: ${err.message}`);
+      }
+      if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
+    }
+    if (!registered) {
+      console.error("[bridge] WARNING: Could not register pairing code. App may not be able to connect by code.");
+      console.error("[bridge] Room ID for manual connection:", roomId);
+    }
+
     displayQR(pairingInfo);
     this.relay.connect();
-
-    const registerPairing = async () => {
-      const url = `${this.config.serverUrl}/pair/register`;
-      const payload = {
-        code: pairingCode,
-        roomId,
-        bridgePublicKey: this.crypto.getPublicKey(),
-        serverUrl: this.config.serverUrl,
-      };
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const resp = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (resp.ok) {
-            console.log(`[bridge] ✅ Pairing code ${pairingCode} registered (expires in 10 min)`);
-            return;
-          }
-          console.warn(`[bridge] Register attempt ${attempt} failed: ${resp.status} ${await resp.text()}`);
-        } catch (err: any) {
-          console.warn(`[bridge] Register attempt ${attempt} error: ${err.message}`);
-        }
-        if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
-      }
-      console.error("[bridge] ❌ Could not register pairing code after 3 attempts");
-      console.error("[bridge] App users can still connect manually with room ID:", roomId);
-    };
-    registerPairing();
 
     console.log("[bridge] Waiting for app connection...\n");
   }
