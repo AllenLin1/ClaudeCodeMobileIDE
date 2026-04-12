@@ -1,17 +1,19 @@
 import SwiftUI
 import SwiftData
+import Combine
 
 struct ChatView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.modelContext) var modelContext
     @Bindable var session: SessionModel
 
-    @Query var allMessages: [MessageModel]
-
     @State private var inputText = ""
     @State private var isRunning = false
-    @State private var showModelPicker = false
     @State private var selectedModel: String
+    @State private var bridgeSessionId: String?
+    @State private var messageCancellable: AnyCancellable?
+
+    @Query var allMessages: [MessageModel]
 
     private var messages: [MessageModel] {
         allMessages
@@ -36,26 +38,17 @@ struct ChatView: View {
         .navigationTitle(session.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(spacing: 8) {
-                    Text(session.name)
-                        .font(Theme.navTitle)
-                        .foregroundColor(Theme.textPrimary)
-                }
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 12) {
                     modelSelector
-
                     Circle()
                         .fill(isRunning ? Theme.statusActive : Theme.textTertiary)
                         .frame(width: 8, height: 8)
                 }
             }
         }
-        .onAppear {
-            setupMessageListener()
-        }
+        .onAppear { setupMessageListener() }
+        .onDisappear { messageCancellable?.cancel() }
     }
 
     // MARK: - Model Selector
@@ -117,19 +110,16 @@ struct ChatView: View {
         switch message.role {
         case "user":
             UserMessageBubble(text: message.content ?? "", time: message.createdAt)
-
         case "assistant":
             switch message.type {
             case "text":
                 AssistantTextBubble(text: message.content ?? "", isStreaming: message.isStreaming)
-
             case "tool_use":
                 ToolCard(
                     toolName: message.toolName ?? "Tool",
                     input: message.toolInputDict,
                     result: message.toolResult
                 )
-
             case "tool_request":
                 if let toolName = message.toolName {
                     ApprovalCard(
@@ -139,23 +129,13 @@ struct ChatView: View {
                         onDeny: { sendApproval(message, allow: false) }
                     )
                 }
-
-            case "ask_question":
-                QuestionCard(
-                    question: message.content ?? "",
-                    options: nil,
-                    onAnswer: { answer in
-                        sendAnswer(message, answer: answer)
-                    }
-                )
-
             case "result":
-                ResultBubble(text: message.content ?? "")
-
+                ResultBubble(text: message.content ?? "Done")
+            case "error":
+                ErrorBubble(text: message.content ?? "Error")
             default:
                 AssistantTextBubble(text: message.content ?? "", isStreaming: false)
             }
-
         default:
             EmptyView()
         }
@@ -164,6 +144,16 @@ struct ChatView: View {
     // MARK: - Input Bar
     private var inputBar: some View {
         HStack(spacing: 12) {
+            if isRunning {
+                Button {
+                    sendInterrupt()
+                } label: {
+                    Image(systemName: "stop.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(Theme.statusError)
+                }
+            }
+
             TextField("Type a message...", text: $inputText, axis: .vertical)
                 .font(Theme.body)
                 .foregroundColor(Theme.textPrimary)
@@ -204,8 +194,11 @@ struct ChatView: View {
 
         appState.relayService.send([
             "type": "prompt",
-            "sessionId": session.id,
+            "sessionId": bridgeSessionId ?? session.id,
             "text": text,
+            "name": session.name,
+            "cwd": session.cwd,
+            "model": session.model,
         ] as [String: Any])
 
         isRunning = true
@@ -215,78 +208,137 @@ struct ChatView: View {
         appState.relayService.send([
             "type": "approve",
             "requestId": message.id,
-            "sessionId": session.id,
+            "sessionId": bridgeSessionId ?? session.id,
             "allow": allow,
         ] as [String: Any])
     }
 
-    private func sendAnswer(_ message: MessageModel, answer: String) {
+    private func sendInterrupt() {
         appState.relayService.send([
-            "type": "answer",
-            "sessionId": session.id,
-            "answers": ["default": answer],
+            "type": "interrupt",
+            "sessionId": bridgeSessionId ?? session.id,
         ] as [String: Any])
+        isRunning = false
     }
 
+    // MARK: - Message Listener
     private func setupMessageListener() {
-        appState.relayService.onMessage = { data in
-            guard let msg = MessageMapper.parse(data) else { return }
-            handleBridgeMessage(msg)
-        }
+        messageCancellable = appState.relayService.messagePublisher
+            .receive(on: RunLoop.main)
+            .sink { [self] data in
+                guard let msg = MessageMapper.parse(data) else {
+                    print("[chat] Failed to parse message")
+                    return
+                }
+                handleBridgeMessage(msg)
+            }
     }
 
     private func handleBridgeMessage(_ msg: MessageMapper.BridgeMessage) {
-        guard msg.sessionId == session.id || msg.sessionId == nil else { return }
-
         switch msg.type {
-        case "sdk:text", "sdk:message":
-            let content = msg.message?.content ?? msg.content
-            let assistantMsg = MessageModel(
-                sessionId: session.id,
-                role: "assistant",
-                type: "text",
-                content: content,
-                isStreaming: true
+        case "session:created":
+            if let newId = msg.sessionId {
+                let oldId = msg.originalSessionId
+                if oldId == session.id || bridgeSessionId == nil {
+                    bridgeSessionId = newId
+                    print("[chat] Bridge session mapped: \(session.id) -> \(newId)")
+                }
+            }
+
+        case "pair:success":
+            print("[chat] Key exchange confirmed by bridge")
+
+        case "sdk:text":
+            let content = msg.sdkMessage?.content ?? msg.content ?? ""
+            if !content.isEmpty {
+                insertAssistantMessage(type: "text", content: content, isStreaming: true)
+            }
+
+        case "sdk:tool_use":
+            let toolName = msg.toolName ?? msg.sdkMessage?.toolName ?? "Tool"
+            let toolInput = msg.toolInput ?? msg.sdkMessage?.toolInput
+            insertAssistantMessage(
+                type: "tool_use",
+                toolName: toolName,
+                toolInput: toolInput
             )
-            modelContext.insert(assistantMsg)
 
         case "sdk:tool_request":
-            let toolMsg = MessageModel(
-                id: msg.requestId ?? UUID().uuidString,
-                sessionId: session.id,
-                role: "assistant",
-                type: "tool_request",
-                toolName: msg.toolName ?? msg.message?.toolName,
-                toolInput: serializeInput(msg.input?.value ?? msg.message?.toolInput?.value)
-            )
-            modelContext.insert(toolMsg)
+            if let toolName = msg.toolName ?? msg.sdkMessage?.toolName {
+                let assistantMsg = MessageModel(
+                    id: msg.requestId ?? UUID().uuidString,
+                    sessionId: session.id,
+                    role: "assistant",
+                    type: "tool_request",
+                    toolName: toolName,
+                    toolInput: serializeDict(msg.toolInput ?? msg.sdkMessage?.toolInput)
+                )
+                modelContext.insert(assistantMsg)
+            }
 
         case "sdk:result":
             isRunning = false
-            let resultMsg = MessageModel(
-                sessionId: session.id,
-                role: "assistant",
-                type: "result",
-                content: msg.message?.content ?? msg.content ?? "Done"
-            )
-            modelContext.insert(resultMsg)
+            markAllStreaming(false)
+            let content = msg.sdkMessage?.content ?? msg.content ?? "Done"
+            insertAssistantMessage(type: "result", content: content)
 
         case "sdk:error", "error":
             isRunning = false
-            let errorMsg = MessageModel(
-                sessionId: session.id,
-                role: "assistant",
-                type: "error",
-                content: msg.error ?? msg.message?.content ?? "Unknown error"
-            )
-            modelContext.insert(errorMsg)
+            markAllStreaming(false)
+            let content = msg.errorMessage ?? msg.sdkMessage?.content ?? msg.content ?? "Unknown error"
+            insertAssistantMessage(type: "error", content: content)
 
         case "tier:limit":
-            // Show paywall or limit message
+            isRunning = false
+            let content = msg.errorMessage ?? "Feature limited. Upgrade to Pro."
+            insertAssistantMessage(type: "error", content: "⚡ \(content)")
+
+        case "auth:required":
+            appState.relayService.send([
+                "type": "auth",
+                "token": "dev",
+            ])
+
+        case "auth:success":
+            print("[chat] Auth success, tier: \(msg.tier ?? "unknown")")
+
+        case "session:list":
+            // Handled by SessionListView if needed
+            break
+
+        case "session:history":
+            // Could replay messages here
             break
 
         default:
-            break
+            print("[chat] Unhandled message type: \(msg.type)")
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func insertAssistantMessage(
+        type: String,
+        content: String? = nil,
+        toolName: String? = nil,
+        toolInput: [String: Any]? = nil,
+        isStreaming: Bool = false
+    ) {
+        let msg = MessageModel(
+            sessionId: session.id,
+            role: "assistant",
+            type: type,
+            content: content,
+            toolName: toolName,
+            toolInput: serializeDict(toolInput),
+            isStreaming: isStreaming
+        )
+        modelContext.insert(msg)
+    }
+
+    private func markAllStreaming(_ streaming: Bool) {
+        for msg in messages where msg.isStreaming {
+            msg.isStreaming = streaming
         }
     }
 
@@ -300,14 +352,11 @@ struct ChatView: View {
         }
     }
 
-    private func serializeInput(_ value: Any?) -> String? {
-        guard let value else { return nil }
-        if let dict = value as? [String: Any],
-           let data = try? JSONSerialization.data(withJSONObject: dict),
-           let str = String(data: data, encoding: .utf8) {
-            return str
-        }
-        return "\(value)"
+    private func serializeDict(_ dict: [String: Any]?) -> String? {
+        guard let dict,
+              let data = try? JSONSerialization.data(withJSONObject: dict),
+              let str = String(data: data, encoding: .utf8) else { return nil }
+        return str
     }
 }
 
@@ -383,7 +432,27 @@ struct ResultBubble: View {
             .padding(.vertical, 8)
             .background(Theme.statusActive.opacity(0.1))
             .clipShape(Capsule())
+            Spacer()
+        }
+    }
+}
 
+struct ErrorBubble: View {
+    let text: String
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(Theme.statusError)
+                Text(text)
+                    .font(Theme.label)
+                    .foregroundColor(Theme.statusError)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Theme.statusError.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             Spacer()
         }
     }

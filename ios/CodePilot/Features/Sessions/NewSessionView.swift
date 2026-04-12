@@ -115,24 +115,16 @@ struct NewSessionView: View {
 
         let model = (appState.currentTier == .free) ? "default" : selectedModel
 
-        appState.relayService.send([
-            "type": "session:create",
-            "name": name,
-            "cwd": cwd,
-            "model": model,
-        ] as [String: Any])
-
+        let sessionId = UUID().uuidString
         let session = SessionModel(
-            id: "pending_\(Date().timeIntervalSince1970)",
+            id: sessionId,
             name: name,
             cwd: cwd,
             model: model
         )
         modelContext.insert(session)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            isCreating = false
-            dismiss()
-        }
+        isCreating = false
+        dismiss()
     }
 }

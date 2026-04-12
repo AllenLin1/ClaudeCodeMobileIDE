@@ -28,8 +28,8 @@ struct ContentView: View {
                 OnboardingView()
             } else {
                 MainTabView()
-                    .onAppear {
-                        if !appState.isConnected && appState.connectionStatus != .connecting {
+                    .task {
+                        if !appState.isConnected && appState.connectionStatus == .disconnected {
                             appState.connect()
                         }
                     }

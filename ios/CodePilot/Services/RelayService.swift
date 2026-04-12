@@ -18,6 +18,7 @@ final class RelayService: ObservableObject {
     private var peerAck = 0
     private var isManuallyClosed = false
 
+    let messagePublisher = PassthroughSubject<Data, Never>()
     var onMessage: ((Data) -> Void)?
 
     private var crypto: CryptoService?
@@ -160,18 +161,24 @@ final class RelayService: ObservableObject {
                 peerAck = ack
             }
 
-            if let plain = envelope["plain"] as? String,
-               let plainData = plain.data(using: .utf8) {
-                onMessage?(plainData)
+            var messageData: Data?
+            if let plain = envelope["plain"] as? String {
+                messageData = plain.data(using: .utf8)
             } else if let encryptedDict = envelope["encrypted"] as? [String: String],
                let nonce = encryptedDict["nonce"],
                let ciphertext = encryptedDict["ciphertext"],
                let crypto {
                 let payload = EncryptedPayload(nonce: nonce, ciphertext: ciphertext)
-                if let decrypted = try? crypto.decrypt(payload),
-                   let decryptedData = decrypted.data(using: .utf8) {
-                    onMessage?(decryptedData)
+                if let decrypted = try? crypto.decrypt(payload) {
+                    messageData = decrypted.data(using: .utf8)
+                } else {
+                    print("[relay] Decryption failed")
                 }
+            }
+
+            if let messageData {
+                messagePublisher.send(messageData)
+                onMessage?(messageData)
             }
 
         case .data(let data):
