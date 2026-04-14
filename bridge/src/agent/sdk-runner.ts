@@ -24,13 +24,6 @@ export interface SDKRunnerOptions {
   onApprovalNeeded: (req: ToolApprovalRequest) => Promise<boolean>;
 }
 
-/**
- * Wraps Claude Agent SDK query() calls.
- * 
- * NOTE: The actual @anthropic-ai/claude-agent-sdk import is deferred to runtime
- * because the package may not be installed in all environments.
- * When the SDK is not available, this falls back to a simulated mode.
- */
 export class SDKRunner extends EventEmitter {
   private opts: SDKRunnerOptions;
   private abortController: AbortController | null = null;
@@ -54,11 +47,11 @@ export class SDKRunner extends EventEmitter {
     this.abortController = new AbortController();
 
     try {
-      const sdk = await this.loadSDK();
-      if (sdk) {
-        await this.runWithSDK(sdk, prompt);
+      const queryFn = await this.loadQueryFunction();
+      if (queryFn) {
+        await this.runWithSDK(queryFn, prompt);
       } else {
-        await this.runSimulated(prompt);
+        this.runSimulated(prompt);
       }
     } catch (err: any) {
       if (err.name === "AbortError") return;
@@ -77,63 +70,52 @@ export class SDKRunner extends EventEmitter {
     this.abortController?.abort();
   }
 
-  private async loadSDK(): Promise<any> {
+  private async loadQueryFunction(): Promise<((...args: any[]) => any) | null> {
+    // Try @anthropic-ai/claude-agent-sdk first (current name)
     try {
-      return await import("@anthropic-ai/claude-code");
-    } catch {
-      try {
-        return await import("@anthropic-ai/claude-agent-sdk");
-      } catch {
-        return null;
+      const sdk = await import("@anthropic-ai/claude-agent-sdk");
+      const fn = sdk.query || sdk.default?.query;
+      if (typeof fn === "function") {
+        console.log("[sdk] Loaded @anthropic-ai/claude-agent-sdk");
+        return fn;
       }
-    }
+    } catch {}
+
+    // Try @anthropic-ai/claude-code (older name)
+    try {
+      const sdk = await import("@anthropic-ai/claude-code");
+      const fn = sdk.query || sdk.default?.query;
+      if (typeof fn === "function") {
+        console.log("[sdk] Loaded @anthropic-ai/claude-code");
+        return fn;
+      }
+    } catch {}
+
+    console.log("[sdk] No Claude SDK found. Install with: npm install @anthropic-ai/claude-agent-sdk");
+    return null;
   }
 
-  private async runWithSDK(sdk: any, prompt: string): Promise<void> {
-    const queryFn = sdk.query || sdk.default?.query;
-    if (!queryFn) {
-      return this.runSimulated(prompt);
-    }
+  private async runWithSDK(queryFn: (...args: any[]) => any, prompt: string): Promise<void> {
+    console.log(`[sdk] Running query: "${prompt.slice(0, 80)}"`);
 
-    const options: any = {
+    const result = queryFn({
       prompt,
       abortController: this.abortController,
       options: {
         cwd: this.opts.cwd,
-        model: this.opts.model,
+        ...(this.opts.model && this.opts.model !== "default" ? { model: this.opts.model } : {}),
         allowedTools: this.opts.allowedTools || [
-          "Read",
-          "Write",
-          "Edit",
-          "Bash",
-          "Glob",
-          "Grep",
+          "Read", "Write", "Edit", "Bash", "Glob", "Grep",
         ],
       },
-    };
+    });
 
-    if (this.opts.sessionId) {
-      options.options.resume = this.opts.sessionId;
-    }
-
-    options.options.canUseTool = async (
-      toolName: string,
-      input: any
-    ): Promise<{ behavior: string }> => {
-      const allowed = await this.opts.onApprovalNeeded({
-        sessionId: this.opts.sessionId,
-        toolName,
-        input,
-      });
-      return { behavior: allowed ? "allow" : "deny" };
-    };
-
-    for await (const message of queryFn(options)) {
+    for await (const message of result) {
       if (this.abortController?.signal.aborted) break;
 
-      const sdkMsg = this.mapSDKMessage(message);
-      if (sdkMsg) {
-        this.emit("message", sdkMsg);
+      const mapped = this.mapMessage(message);
+      if (mapped) {
+        this.emit("message", mapped);
       }
     }
 
@@ -144,9 +126,10 @@ export class SDKRunner extends EventEmitter {
     } satisfies SDKMessage);
   }
 
-  private mapSDKMessage(raw: any): SDKMessage | null {
+  private mapMessage(raw: any): SDKMessage | null {
     if (!raw) return null;
 
+    // Handle different SDK message formats
     if (raw.type === "assistant" && raw.message) {
       const content = raw.message.content;
       if (Array.isArray(content)) {
@@ -169,11 +152,7 @@ export class SDKRunner extends EventEmitter {
         }
       }
       if (typeof content === "string") {
-        return {
-          type: "text",
-          sessionId: this.opts.sessionId,
-          content,
-        };
+        return { type: "text", sessionId: this.opts.sessionId, content };
       }
     }
 
@@ -181,21 +160,23 @@ export class SDKRunner extends EventEmitter {
       return {
         type: "result",
         sessionId: this.opts.sessionId,
-        content:
-          typeof raw.result === "string"
-            ? raw.result
-            : JSON.stringify(raw.result),
+        content: typeof raw.result === "string" ? raw.result : JSON.stringify(raw.result),
       };
+    }
+
+    // Direct text messages
+    if (typeof raw === "string") {
+      return { type: "text", sessionId: this.opts.sessionId, content: raw };
     }
 
     return null;
   }
 
-  private async runSimulated(prompt: string): Promise<void> {
+  private runSimulated(prompt: string): void {
     this.emit("message", {
       type: "text",
       sessionId: this.opts.sessionId,
-      content: `[Bridge] Received prompt: "${prompt.slice(0, 100)}..."\n\nClaude Agent SDK is not installed. Install it with:\n  npm install @anthropic-ai/claude-code\n\nThe bridge will relay messages once the SDK is available.`,
+      content: `[Bridge] Received prompt: "${prompt.slice(0, 100)}"\n\nClaude Agent SDK is not installed. Install it with:\n  npm install @anthropic-ai/claude-agent-sdk\n\nThe bridge will relay messages once the SDK is available.`,
     } satisfies SDKMessage);
 
     this.emit("message", {
